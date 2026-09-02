@@ -1,0 +1,79 @@
+{
+  "@@locale": "en",
+  "appTitle": "AppImage Studio",
+  "appSubtitle": "Convert any bundled app folder (Flutter, Rust, Go, C++, etc.) into a standalone AppImage in one click",
+  "switchLanguage": "Switch Language",
+  "appVersion": "v1.0.0",
+  "developedBy": "Developed with ❤️ by Ali El Khedr & Contributors",
+  
+  "sourceCardTitle": "1. App Bundle Path & Executable",
+  "bundleDirLabel": "App Bundle Directory",
+  "bundleDirHint": "Choose bundle directory or compiled project folder...",
+  "executableLabel": "Executable Binary Name",
+  "executableHint": "e.g. my_app or runner",
+  "autoDetectedExecutables": "Auto-Detected Executables",
+  "browseButton": "Browse...",
+  
+  "metadataCardTitle": "2. App Metadata & Details",
+  "appNameLabel": "App Name",
+  "appNameHint": "e.g. My Awesome App",
+  "versionLabel": "Version",
+  "versionHint": "1.0.0",
+  "categoryLabel": "Category",
+  "iconLabel": "App Icon (PNG or SVG)",
+  "iconHint": "Choose an image in PNG or SVG format...",
+  "descriptionLabel": "Short App Description",
+  "descriptionHint": "Short description that appears in OS search...",
+  
+  "outputCardTitle": "3. Output Directory & Preferences",
+  "outputDirLabel": "AppImage Output Directory",
+  "outputDirHint": "Choose output folder...",
+  "integrateMenuTitle": "Install application in desktop menu (Start menu) upon completion",
+  "integrateMenuSubtitle": "Creates a standard system shortcut to launch the app from search and dock immediately",
+  
+  "buildButton": "Build AppImage Now",
+  "validationError": "Please fill all required fields and select the bundle path and executable",
+  "filePickError": "Error picking path: {error}",
+  "@filePickError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  
+  "buildingTitle": "Building AppImage Package...",
+  "buildingSubtitle": "Please wait while packaging and compressing files",
+  "buildSuccessTitle": "AppImage Built Successfully!",
+  "buildFailedTitle": "Build Failed",
+  
+  "openFolder": "Open Output Folder",
+  "testRunApp": "Test & Run AppImage Now",
+  "close": "Close",
+  "failedToRun": "Failed to launch application: {error}",
+  "@failedToRun": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "catUtility": "Utilities",
+  "catDevelopment": "Development & Programming",
+  "catGame": "Games",
+  "catGraphics": "Design & Graphics",
+  "catAudioVideo": "Audio & Video",
+  "catOffice": "Office & Productivity",
+  "catNetwork": "Internet & Network",
+  "catEducation": "Education",
+
+  "aboutTooltip": "About App",
+  "aboutAppTitle": "About AppImage Studio",
+  "aboutAppDescription": "A modern, standalone open-source desktop studio to package and distribute Linux applications as AppImages in one click with zero dependencies.",
+  "developerLabel": "Lead Developer & Founder:",
+  "developerName": "Ali El Khedr",
+  "websiteTooltip": "Visit Developer Website",
+  "blogPostButton": "Read Full Article on Blog",
+  "contributorsSectionTitle": "Community & Contributors",
+  "contributorsPrompt": "This project is fully open source. All contributions and community pull requests on GitHub are warmly welcome!",
+  "githubRepoButton": "GitHub Repository",
+  "contributorsButton": "Contributors on GitHub",
+  "licenseNotice": "License: Open Source under GNU GPLv3"
+}

@@ -1,0 +1,43 @@
+name: appimage_studio
+description: "A modern desktop studio to package and distribute standalone Linux AppImage applications."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  app_image: ^1.0.17
+  file_picker: ^8.1.7
+  path: ^1.9.0
+  http: ^1.2.2
+  url_launcher: ^6.3.1
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  linux: true
+  image_path: "assets/images/app_icon.png"
+
+# The following section is specific to Flutter packages.
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/bin/appimagetool
+    - assets/icon.png
+    - assets/images/app_icon.png
