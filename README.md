@@ -28,8 +28,7 @@
 
 <br />
 
-| 🖥️ **Live Build Console | نافذة البناء المباشرة** | 🌐 **Language & Settings | اللغات والإعدادات** |
-| :---: | :---: |
+| 🖥️ **Live Build Console | نافذة البناء المباشرة** |
 | <img src="assets/screenshots/build_console.png" alt="Build Console" width="100%" /> | <img src="assets/screenshots/dark_mode.png" alt="Settings & Dark Mode" width="100%" /> |
 | <img src="assets/screenshots/build_console2.png" alt="Build Console" width="100%" /> | <img src="assets/screenshots/dark_mode.png" alt="Settings & Dark Mode" width="100%" /> |
 ---
