@@ -34,7 +34,7 @@
 ### 🎨 الواجهة الرئيسية (Main Screen)
 | 🌙 **الوضع الداكن (Dark Mode)** | ☀️ **الوضع الفاتح (Light Mode)** |
 | :---: | :---: |
-| <img src="assets/screenshots/main_screen.png" alt="Main Screen Dark Mode" width="100%" /> | <img src="assets/screenshots/main_screen2.png" alt="Main Screen Light Mode" width="100%" /> |
+| <img src="assets/screenshots/main_screen.png" alt="Main Screen Dark Mode" width="100%" /> <br><img src="assets/screenshots/main_screen2.png" alt="Main Screen Dark Mode" width="100%" /> | <img src="assets/screenshots/main_screen1.png" alt="Main Screen Light Mode" width="100%" /> <br><img src="assets/screenshots/main_screen3.png" alt="Main Screen Light Mode" width="100%" /> <br><br><img src="assets/screenshots/main_screen3.png" alt="Main Screen Light Mode" width="100%" /> |
 
 <br />
 
