@@ -1,13 +1,29 @@
 # 🚀 AppImage Studio | استوديو آب إيمج
-> **A modern, standalone desktop studio to package and distribute Linux applications as AppImages in one click.**  
-> *أداة مكتبية حديثة ومستقلة لتغليف وتوزيع تطبيقات لينكس كحزم AppImage بنقرة زر واحدة.*
 
 <p align="center">
   <img src="assets/images/app_icon.png" width="128" height="128" alt="AppImage Studio Icon" />
 </p>
 
 <p align="center">
-  <a href="#english">English</a> • <a href="#arabic">العربية</a> • <a href="#features">Features</a> • <a href="#screenshots">Screenshots / الصور</a> • <a href="#compatibility">Compatibility / التوافق</a> • <a href="#requirements">Requirements / الشروط</a> • <a href="#how-to-use">How to Use</a>
+  <strong>A modern, standalone desktop studio to package and distribute Linux applications as AppImages in one click.</strong><br />
+  <em>أداة مكتبية حديثة ومستقلة لتغليف وتوزيع تطبيقات لينكس كحزم AppImage بنقرة زر واحدة.</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Release-v1.0.0-00E5FF?style=for-the-badge&logo=appimage&logoColor=white" alt="Release" />
+  <img src="https://img.shields.io/badge/Platform-Linux%20x86__64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
+  <img src="https://img.shields.io/badge/License-GPL--3.0-7C4DFF?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/Built%20With-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
+</p>
+
+<p align="center">
+  <a href="#screenshots">📸 Screenshots / لقطات الشاشة</a> • 
+  <a href="#english">🇬🇧 English</a> • 
+  <a href="#arabic">🇸🇦 العربية</a> • 
+  <a href="#compatibility">🐧 Compatibility / التوافق</a> • 
+  <a href="#requirements">📋 Requirements / الشروط</a> • 
+  <a href="#how-to-use">🛠️ How to Use / طريقة التشغيل</a> • 
+  <a href="#resources">📖 Resources / المصادر</a>
 </p>
 
 ---
@@ -15,22 +31,18 @@
 <a name="screenshots"></a>
 ## 📸 Screenshots | لقطات من التطبيق
 
-<p align="center">
-  <img src="assets/screenshots/main_screen.png" alt="AppImage Studio Main Screen" width="90%" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);" />
-</p>
-<p align="center">
-  <img src="assets/screenshots/main_screen2.png" alt="AppImage Studio Main Screen" width="90%" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);" />
-</p>
-
-<p align="center">
-  <em>الواجهة الرئيسية للتطبيق | Main Application Interface</em>
-</p>
+### 🎨 الواجهة الرئيسية (Main Screen)
+| 🌙 **الوضع الداكن (Dark Mode)** | ☀️ **الوضع الفاتح (Light Mode)** |
+| :---: | :---: |
+| <img src="assets/screenshots/main_screen.png" alt="Main Screen Dark Mode" width="100%" /> | <img src="assets/screenshots/main_screen2.png" alt="Main Screen Light Mode" width="100%" /> |
 
 <br />
 
-| 🖥️ **Live Build Console | نافذة البناء المباشرة** |
-| <img src="assets/screenshots/build_console.png" alt="Build Console" width="100%" /> | <img src="assets/screenshots/dark_mode.png" alt="Settings & Dark Mode" width="100%" /> |
-| <img src="assets/screenshots/build_console2.png" alt="Build Console" width="100%" /> | <img src="assets/screenshots/dark_mode.png" alt="Settings & Dark Mode" width="100%" /> |
+### 🖥️ نافذة البناء المباشرة وسجل المعالجة (Live Build Console)
+| ⏳ **أثناء البناء والضغط (Building Process)** | ✅ **اكتمال التحزيم بنجاح (Build Success)** |
+| :---: | :---: |
+| <img src="assets/screenshots/build_console.png" alt="Build Console" width="100%" /> | <img src="assets/screenshots/build_console2.png" alt="Build Success" width="100%" /> |
+
 ---
 
 <a name="english"></a>
@@ -42,7 +54,7 @@
 - 🖱️ **One-Click Packaging**: Select your compiled bundle folder and build your `.AppImage` instantly.
 - 💼 **Portable Single-File Apps**: Turn your programs into portable binaries that run directly from any folder or USB drive without requiring installation or root access.
 - 🔍 **Smart Auto-Detection**: Automatically detects application names, executable binaries, and app icons.
-- ⚡ **100% Offline-First**: Built-in `appimagetool` binary — works without internet connection.
+- ⚡ **100% Offline-First**: Built-in `appimagetool` binary — works completely offline without network dependency.
 - 🌐 **Multilingual & System Adaptive**: Full support for Arabic (RTL) and English (LTR) with automatic system language detection and instant switcher.
 - 📌 **Optional Desktop Integration**: Option to install your newly built application into your system Start menu and dock immediately.
 - 🖥️ **Live Build Console**: Real-time terminal output with smart error diagnostics and suggested fixes.
@@ -59,7 +71,7 @@
 - 📦 **تغليف فوري بنقرة واحدة**: اختر مجلد التطبيق المجمّع واضغط على زر التوليد ليصبح تطبيقك حزمة واحدة جاهزة.
 - 💼 **إنشاء تطبيقات محمولة (Portable Apps)**: تحويل أي برنامج إلى ملف تنفيذي محمول مستقل، يمكنك نسخه إلى فلاش ميموري (USB) وتشغيله على أي حاسوب لينكس مباشرة دون تثبيت أو صلاحيات جذر.
 - 🔍 **فحص واكتشاف ذكي تلقائي**: يتعرف التطبيق تلقائياً على اسم البرنامج، الملف التنفيذي الرئيسي، والأيقونة المناسبة.
-- ⚡ **استقلالية تامة وبدون إنترنت (Offline-First)**: مدمج بـ `appimagetool` ليعمل في أي بيئة معزولة عن الشبكة.
+- ⚡ **استقلالية تامة وبدون إنترنت (Offline-First)**: مدمج بـ `appimagetool` ليعمل في أي بيئة معزولة عن الشبكة بأمان كامل.
 - 🌐 **دعم كامل للغتين العربية والإنجليزية**: واجهة تتكيف تلقائياً مع لغة نظامك مع دعم اتجاه اليمين لليسار (RTL) وزر تبديل فوري.
 - 📌 **تكامل اختياري مع قائمة "ابدأ"**: خيار لتثبيت التطبيق المولد مباشرة في قائمة تطبيقات جهازك وشريط المهام.
 - 🖥️ **نافذة طرفية تفاعلية مباشرة**: عرض خطوات البناء ومخرجات الضغط الحية مع تشخيص ذكي للأخطاء وتقديم حلول مقترحة.
@@ -156,6 +168,7 @@ The resulting `.AppImage` will be located in `dist/AppImageStudio-x86_64.AppImag
 
 ---
 
+<a name="resources"></a>
 ## 📖 Article & Resources | الشرح والمصادر
 - 📝 **Full Detailed Article on Blog | مقال الشرح التفصيلي على المدونة:** [alielkhedr.com - AppImage Studio](https://www.alielkhedr.com/2026/09/appimage-studio.html)
 - 🌐 **Developer Website | الموقع الشخصي للمطور:** [alielkhedr.com](https://alielkhedr.com)
