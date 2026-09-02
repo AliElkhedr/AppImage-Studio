@@ -176,8 +176,8 @@ The resulting `.AppImage` will be located in `dist/AppImageStudio-x86_64.AppImag
 ---
 
 ## 🗺️ Roadmap & Vision | خارطة الطريق والرؤية
-For detailed architectural principles, feature matrix, and upcoming release plans, check out our [**ROADMAP.md**](docs/ROADMAP.md).  
-*للاطلاع على المبادئ المعمارية وخطة الميزات للإصدارات القادمة، راجع وثيقة [خارطة الطريق](docs/ROADMAP.md).*
+*For architectural principles and feature plan for future releases, God willing, please refer to the [Roadmap document](docs/ROADMAP.md).*
+*للاطلاع على المبادئ المعمارية وخطة الميزات للإصدارات القادمة بإذن الله، راجع وثيقة [خارطة الطريق](docs/ROADMAP.md).*
 
 ---
 
