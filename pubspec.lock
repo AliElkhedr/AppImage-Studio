@@ -5,10 +5,10 @@ packages:
     dependency: "direct main"
     description:
       name: app_image
-      sha256: dd0dad81e48b2bd0b947fdeb748d3cfdab2dcdc595c5c46994a1cc4fb1eed036
+      sha256: "6e9b1407632edbda512177a4f61c606cdd2ad738d27434e94feb03fc009f403f"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.17"
+    version: "1.0.18"
   archive:
     dependency: transitive
     description:
