@@ -3,7 +3,7 @@
   "appTitle": "استوديو آب إيمج",
   "appSubtitle": "حوّل أي مجلد تطبيق مجمّع (Flutter, Rust, Go, C++, etc.) إلى حزمة AppImage مستقلة بنقرة واحدة",
   "switchLanguage": "تغيير اللغة",
-  "appVersion": "v1.0.0",
+  "appVersion": "v1.1.0",
   "developedBy": "تطوير بكل ❤️ بواسطة علي الخضر والمساهمين",
   
   "sourceCardTitle": "1. مسار مجلد التطبيق والملف التنفيذي",
@@ -65,5 +65,27 @@
   "contributorsPrompt": "المشروع مفتوح المصدر بالكامل.. نرحب بمساهمتك وتطويرك معنا عبر GitHub!",
   "githubRepoButton": "مستودع المشروع على GitHub",
   "contributorsButton": "قائمة المساهمين على GitHub",
-  "licenseNotice": "الترخيص: مفتوح المصدر بموجب رخصة GNU GPLv3"
+  "licenseNotice": "الترخيص: مفتوح المصدر بموجب رخصة GNU GPLv3",
+
+  "copyLogsTooltip": "نسخ سجل البناء إلى الحافظة",
+  "exportLogsTooltip": "تصدير السجل كملف نصي",
+  "logsCopied": "تم نسخ سجل البناء إلى الحافظة بنجاح!",
+  "logsExported": "تم حفظ السجل في: {path}",
+
+  "savePresetButton": "حفظ القالب",
+  "savePresetTooltip": "حفظ إعدادات المشروع الحالية في ملف appimage_studio.yaml",
+  "savePresetSuccess": "تم حفظ إعدادات المشروع في ملف appimage_studio.yaml",
+  "loadPresetButton": "تحميل قالب",
+  "presetLoaded": "تم تحميل إعدادات المشروع من القالب بنجاح",
+
+  "exportBuildScriptButton": "تصدير سكربت البناء",
+  "exportBuildScriptTooltip": "توليد سكربت build_appimage.sh للطرفية",
+  "exportBuildScriptSuccess": "تم إنشاء سكربت البناء: build_appimage.sh",
+
+  "dragAndDropPrompt": "أسقط مجلد التطبيق أو ملف الأيقونة هنا",
+  "dragAndDropSubtitle": "اسحب وأسقط حزمة المشروع أو الصورة لتعبئة البيانات تلقائياً",
+  "projectDetectedNotification": "تم التعرف الذكي على المشروع: {type}",
+  "livePreviewTitle": "معاينة سطح المكتب الحية",
+  "livePreviewSubtitle": "معاينة فورية لمظهر الأيقونة، واختصار النظام، واسم ملف الحزمة",
+  "liveBadge": "مباشر"
 }

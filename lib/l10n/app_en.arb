@@ -3,7 +3,7 @@
   "appTitle": "AppImage Studio",
   "appSubtitle": "Convert any bundled app folder (Flutter, Rust, Go, C++, etc.) into a standalone AppImage in one click",
   "switchLanguage": "Switch Language",
-  "appVersion": "v1.0.0",
+  "appVersion": "v1.1.0",
   "developedBy": "Developed with ❤️ by Ali El Khedr & Contributors",
   
   "sourceCardTitle": "1. App Bundle Path & Executable",
@@ -75,5 +75,37 @@
   "contributorsPrompt": "This project is fully open source. All contributions and community pull requests on GitHub are warmly welcome!",
   "githubRepoButton": "GitHub Repository",
   "contributorsButton": "Contributors on GitHub",
-  "licenseNotice": "License: Open Source under GNU GPLv3"
+  "licenseNotice": "License: Open Source under GNU GPLv3",
+
+  "copyLogsTooltip": "Copy build logs to clipboard",
+  "exportLogsTooltip": "Export logs to text file",
+  "logsCopied": "Build logs copied to clipboard!",
+  "logsExported": "Logs exported to {path}",
+  "@logsExported": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+
+  "savePresetButton": "Save Preset",
+  "savePresetTooltip": "Save current settings to appimage_studio.yaml in project folder",
+  "savePresetSuccess": "Configuration saved to appimage_studio.yaml",
+  "loadPresetButton": "Load Preset",
+  "presetLoaded": "Project configuration loaded from preset",
+
+  "exportBuildScriptButton": "Export Build Script",
+  "exportBuildScriptTooltip": "Generate a standalone build_appimage.sh terminal script",
+  "exportBuildScriptSuccess": "Build script created: build_appimage.sh",
+
+  "dragAndDropPrompt": "Drop folder or app icon here",
+  "dragAndDropSubtitle": "Drag and drop your project bundle or icon to populate fields instantly",
+  "projectDetectedNotification": "Smart project detected: {type}",
+  "@projectDetectedNotification": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "livePreviewTitle": "Live Desktop Preview",
+  "livePreviewSubtitle": "Real-time preview of launcher icon, menu entry and AppImage filename",
+  "liveBadge": "LIVE"
 }

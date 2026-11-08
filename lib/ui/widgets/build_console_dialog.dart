@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import '../../core/models/build_log_entry.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
@@ -222,8 +224,63 @@ class _BuildConsoleDialogState extends State<BuildConsoleDialog> {
 
             // Actions Bar
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // Copy & Export Logs
+                OutlinedButton.icon(
+                  onPressed: _logs.isEmpty
+                      ? null
+                      : () async {
+                          final text = _logs.map((e) => e.message).join('\n');
+                          await Clipboard.setData(ClipboardData(text: text));
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.logsCopied),
+                                duration: const Duration(seconds: 2),
+                                backgroundColor: const Color(0xFF1E2638),
+                              ),
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.copy_rounded, size: 15),
+                  label: Text(l10n.copyLogsTooltip),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF94A3B8),
+                    side: const BorderSide(color: Color(0xFF1E2638)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _logs.isEmpty
+                      ? null
+                      : () async {
+                          final text = _logs.map((e) => e.message).join('\n');
+                          final home = Platform.environment['HOME'] ?? '';
+                          final desktop = Directory(p.join(home, 'Desktop')).existsSync()
+                              ? p.join(home, 'Desktop')
+                              : home;
+                          final logFile = File(p.join(desktop, 'appimage_studio_build.log'));
+                          await logFile.writeAsString(text);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.logsExported(logFile.path)),
+                                duration: const Duration(seconds: 4),
+                                backgroundColor: const Color(0xFF1E2638),
+                              ),
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.download_rounded, size: 15),
+                  label: Text(l10n.exportLogsTooltip),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF94A3B8),
+                    side: const BorderSide(color: Color(0xFF1E2638)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+                const Spacer(),
                 if (!_isBuilding && _resultPath != null) ...[
                   OutlinedButton.icon(
                     onPressed: _openOutputFolder,

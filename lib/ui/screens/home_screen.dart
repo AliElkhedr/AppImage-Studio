@@ -1,13 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'package:desktop_drop/desktop_drop.dart';
 import '../../core/models/app_metadata.dart';
 import '../../core/services/appimage_builder_service.dart';
+import '../../core/services/preset_service.dart';
+import '../../core/services/project_detector_service.dart';
+import '../../core/services/build_script_generator_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/file_picker_field.dart';
 import '../widgets/build_console_dialog.dart';
 import '../widgets/about_studio_dialog.dart';
+import '../widgets/live_preview_card.dart';
 
 class HomeScreen extends StatefulWidget {
   final ValueChanged<Locale?>? onLocaleChanged;
@@ -33,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _descriptionController = TextEditingController();
 
   List<String> _detectedExecutables = [];
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -44,6 +50,28 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       _metadata.outputPath = home;
     }
+
+    // Attach listeners so LivePreviewCard updates live as the user types
+    _appNameController.addListener(() {
+      if (_metadata.appName != _appNameController.text) {
+        setState(() => _metadata.appName = _appNameController.text);
+      }
+    });
+    _executableController.addListener(() {
+      if (_metadata.executableName != _executableController.text) {
+        setState(() => _metadata.executableName = _executableController.text);
+      }
+    });
+    _versionController.addListener(() {
+      if (_metadata.version != _versionController.text) {
+        setState(() => _metadata.version = _versionController.text);
+      }
+    });
+    _descriptionController.addListener(() {
+      if (_metadata.description != _descriptionController.text) {
+        setState(() => _metadata.description = _descriptionController.text);
+      }
+    });
   }
 
   @override
@@ -55,24 +83,147 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _onBundlePathSelected(String path) {
-    setState(() {
-      _metadata.bundlePath = path;
+  void _syncMetadataFromControllers() {
+    _metadata.appName = _appNameController.text.trim();
+    _metadata.executableName = _executableController.text.trim();
+    _metadata.version = _versionController.text.trim();
+    _metadata.description = _descriptionController.text.trim();
+  }
 
-      final dirName = p.basename(path);
-      if (_appNameController.text.trim().isEmpty || _appNameController.text == 'bundle') {
+  void _applyLoadedPreset(AppMetadata preset) {
+    setState(() {
+      _metadata.appName = preset.appName;
+      _metadata.executableName = preset.executableName;
+      _metadata.version = preset.version;
+      _metadata.description = preset.description;
+      _metadata.category = preset.category;
+      _metadata.bundlePath = preset.bundlePath;
+      _metadata.iconPath = preset.iconPath;
+      if (preset.outputPath.isNotEmpty) {
+        _metadata.outputPath = preset.outputPath;
+      }
+      _metadata.integrateInMenu = preset.integrateInMenu;
+
+      _appNameController.text = preset.appName;
+      _executableController.text = preset.executableName;
+      _versionController.text = preset.version;
+      _descriptionController.text = preset.description;
+
+      _scanForExecutables(preset.bundlePath);
+    });
+
+    if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_outline, color: Color(0xFF00E676), size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.presetLoaded),
+            ],
+          ),
+          backgroundColor: const Color(0xFF161E2E),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDroppedPath(String path) async {
+    final type = await FileSystemEntity.type(path);
+    if (type == FileSystemEntityType.directory) {
+      await _onBundlePathSelected(path);
+    } else if (type == FileSystemEntityType.file) {
+      final ext = p.extension(path).toLowerCase();
+      if (['.png', '.svg', '.jpg', '.jpeg'].contains(ext)) {
+        setState(() {
+          _metadata.iconPath = path;
+        });
+      } else if (p.basename(path) == 'appimage_studio.yaml' || ext == '.yaml') {
+        final preset = await PresetService.loadPreset(p.dirname(path));
+        if (preset != null) {
+          _applyLoadedPreset(preset);
+        }
+      }
+    }
+  }
+
+  Future<void> _onBundlePathSelected(String path) async {
+    // 1. Run smart project detector
+    final detection = await ProjectDetectorService.detect(path);
+
+    setState(() {
+      if (detection.loadedPreset != null) {
+        _applyLoadedPreset(detection.loadedPreset!);
+        return;
+      }
+
+      _metadata.bundlePath = detection.bundlePath ?? path;
+
+      if (detection.appName != null && detection.appName!.isNotEmpty) {
+        _appNameController.text = detection.appName!;
+        _metadata.appName = detection.appName!;
+      } else {
+        final dirName = p.basename(path);
         final candidateName = dirName == 'bundle' ? p.basename(p.dirname(path)) : dirName;
         _appNameController.text = candidateName;
         _metadata.appName = candidateName;
       }
 
-      _scanForExecutables(path);
-      _scanForIcon(path);
+      if (detection.executableName != null && detection.executableName!.isNotEmpty) {
+        _executableController.text = detection.executableName!;
+        _metadata.executableName = detection.executableName!;
+      }
+
+      if (detection.version != null && detection.version!.isNotEmpty) {
+        _versionController.text = detection.version!;
+        _metadata.version = detection.version!;
+      }
+
+      if (detection.description != null && detection.description!.isNotEmpty) {
+        _descriptionController.text = detection.description!;
+        _metadata.description = detection.description!;
+      }
+
+      if (detection.category != null) {
+        _metadata.category = detection.category!;
+      }
+
+      if (detection.iconPath != null) {
+        _metadata.iconPath = detection.iconPath!;
+      }
+
+      _scanForExecutables(_metadata.bundlePath);
+      if (_metadata.iconPath == null) {
+        _scanForIcon(_metadata.bundlePath);
+      }
     });
+
+    if (mounted && detection.type != DetectedProjectType.generic) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.bolt, color: AppTheme.primaryCyan, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(detection.summary)),
+            ],
+          ),
+          backgroundColor: const Color(0xFF161E2E),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: const BorderSide(color: AppTheme.primaryCyan),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _scanForExecutables(String bundlePath) async {
     final dir = Directory(bundlePath);
+    if (!await dir.exists()) return;
     final executables = <String>[];
 
     try {
@@ -104,6 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _scanForIcon(String bundlePath) async {
     final dir = Directory(bundlePath);
+    if (!await dir.exists()) return;
     try {
       await for (final entity in dir.list(recursive: true)) {
         if (entity is File) {
@@ -122,12 +274,77 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
+  Future<void> _savePreset() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_metadata.bundlePath.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.validationError),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    _syncMetadataFromControllers();
+    final targetDir = Directory(_metadata.bundlePath).existsSync() ? _metadata.bundlePath : Directory.current.path;
+    await PresetService.savePreset(targetDir, _metadata);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.bookmark_added, color: Color(0xFF00E676), size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.savePresetSuccess),
+            ],
+          ),
+          backgroundColor: const Color(0xFF161E2E),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _exportBuildScript() async {
+    final l10n = AppLocalizations.of(context)!;
+    _syncMetadataFromControllers();
+    if (!_metadata.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.validationError),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    final targetDir = Directory(_metadata.bundlePath).existsSync() ? _metadata.bundlePath : Directory.current.path;
+    final scriptFile = await BuildScriptGeneratorService.generateScript(
+      targetDirectory: targetDir,
+      metadata: _metadata,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.terminal, color: AppTheme.primaryCyan, size: 18),
+              const SizedBox(width: 8),
+              Expanded(child: Text('${l10n.exportBuildScriptSuccess} (${p.basename(scriptFile.path)})')),
+            ],
+          ),
+          backgroundColor: const Color(0xFF161E2E),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   void _startBuild() {
     final l10n = AppLocalizations.of(context)!;
-    _metadata.appName = _appNameController.text.trim();
-    _metadata.executableName = _executableController.text.trim();
-    _metadata.version = _versionController.text.trim();
-    _metadata.description = _descriptionController.text.trim();
+    _syncMetadataFromControllers();
 
     if (!_metadata.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -155,31 +372,108 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 24),
-                  _buildSourceCard(),
-                  const SizedBox(height: 20),
-                  _buildMetadataCard(),
-                  const SizedBox(height: 20),
-                  _buildOutputCard(),
-                  const SizedBox(height: 28),
-                  _buildBuildButton(),
-                  const SizedBox(height: 24),
-                  _buildFooter(),
-                  const SizedBox(height: 24),
-                ],
+      body: DropTarget(
+        onDragEntered: (_) => setState(() => _isDragging = true),
+        onDragExited: (_) => setState(() => _isDragging = false),
+        onDragDone: (details) async {
+          setState(() => _isDragging = false);
+          if (details.files.isNotEmpty) {
+            await _handleDroppedPath(details.files.first.path);
+          }
+        },
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 24),
+                        _buildSourceCard(),
+                        const SizedBox(height: 20),
+                        _buildMetadataCard(),
+                        const SizedBox(height: 20),
+                        _buildOutputCard(),
+                        const SizedBox(height: 20),
+                        LivePreviewCard(metadata: _metadata),
+                        const SizedBox(height: 24),
+                        _buildActionButtonsRow(),
+                        const SizedBox(height: 24),
+                        _buildFooter(),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
+            if (_isDragging) _buildDragOverlay(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDragOverlay() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      color: const Color(0xDD0D1117),
+      padding: const EdgeInsets.all(32),
+      child: Center(
+        child: Container(
+          width: double.infinity,
+          height: 380,
+          decoration: BoxDecoration(
+            color: const Color(0xFF161E2E).withAlpha(220),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppTheme.primaryCyan, width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryCyan.withAlpha(80),
+                blurRadius: 30,
+                spreadRadius: 4,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryCyan.withAlpha(40),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.file_download_outlined,
+                  size: 64,
+                  color: AppTheme.primaryCyan,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.dragAndDropPrompt,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.dragAndDropSubtitle,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -455,6 +749,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ),
+                // Save Preset Button
+                OutlinedButton.icon(
+                  onPressed: _metadata.bundlePath.isNotEmpty ? _savePreset : null,
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 15),
+                  label: Text(l10n.savePresetButton, style: const TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primary,
+                    side: BorderSide(color: primary.withAlpha(120)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -646,6 +951,36 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildActionButtonsRow() {
+    final l10n = AppLocalizations.of(context)!;
+    final primary = AppTheme.getPrimary(context);
+
+    return Column(
+      children: [
+        _buildBuildButton(),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _metadata.isValid ? _exportBuildScript : null,
+              icon: Icon(Icons.terminal_rounded, size: 16, color: primary),
+              label: Text(
+                l10n.exportBuildScriptButton,
+                style: TextStyle(fontSize: 13, color: primary),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: primary.withAlpha(120)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

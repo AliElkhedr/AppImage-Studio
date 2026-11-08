@@ -119,7 +119,7 @@ abstract class AppLocalizations {
   /// No description provided for @appVersion.
   ///
   /// In en, this message translates to:
-  /// **'v1.0.0'**
+  /// **'v1.1.0'**
   String get appVersion;
 
   /// No description provided for @developedBy.
@@ -445,6 +445,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'License: Open Source under GNU GPLv3'**
   String get licenseNotice;
+
+  /// No description provided for @copyLogsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy build logs to clipboard'**
+  String get copyLogsTooltip;
+
+  /// No description provided for @exportLogsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Export logs to text file'**
+  String get exportLogsTooltip;
+
+  /// No description provided for @logsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Build logs copied to clipboard!'**
+  String get logsCopied;
+
+  /// No description provided for @logsExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs exported to {path}'**
+  String logsExported(String path);
+
+  /// No description provided for @savePresetButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Preset'**
+  String get savePresetButton;
+
+  /// No description provided for @savePresetTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Save current settings to appimage_studio.yaml in project folder'**
+  String get savePresetTooltip;
+
+  /// No description provided for @savePresetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration saved to appimage_studio.yaml'**
+  String get savePresetSuccess;
+
+  /// No description provided for @loadPresetButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Preset'**
+  String get loadPresetButton;
+
+  /// No description provided for @presetLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Project configuration loaded from preset'**
+  String get presetLoaded;
+
+  /// No description provided for @exportBuildScriptButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Build Script'**
+  String get exportBuildScriptButton;
+
+  /// No description provided for @exportBuildScriptTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a standalone build_appimage.sh terminal script'**
+  String get exportBuildScriptTooltip;
+
+  /// No description provided for @exportBuildScriptSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Build script created: build_appimage.sh'**
+  String get exportBuildScriptSuccess;
+
+  /// No description provided for @dragAndDropPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop folder or app icon here'**
+  String get dragAndDropPrompt;
+
+  /// No description provided for @dragAndDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag and drop your project bundle or icon to populate fields instantly'**
+  String get dragAndDropSubtitle;
+
+  /// No description provided for @projectDetectedNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart project detected: {type}'**
+  String projectDetectedNotification(String type);
+
+  /// No description provided for @livePreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Desktop Preview'**
+  String get livePreviewTitle;
+
+  /// No description provided for @livePreviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time preview of launcher icon, menu entry and AppImage filename'**
+  String get livePreviewSubtitle;
+
+  /// No description provided for @liveBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get liveBadge;
 }
 
 class _AppLocalizationsDelegate

@@ -20,7 +20,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchLanguage => 'Switch Language';
 
   @override
-  String get appVersion => 'v1.0.0';
+  String get appVersion => 'v1.1.0';
 
   @override
   String get developedBy => 'Developed with ❤️ by Ali El Khedr & Contributors';
@@ -195,4 +195,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licenseNotice => 'License: Open Source under GNU GPLv3';
+
+  @override
+  String get copyLogsTooltip => 'Copy build logs to clipboard';
+
+  @override
+  String get exportLogsTooltip => 'Export logs to text file';
+
+  @override
+  String get logsCopied => 'Build logs copied to clipboard!';
+
+  @override
+  String logsExported(String path) {
+    return 'Logs exported to $path';
+  }
+
+  @override
+  String get savePresetButton => 'Save Preset';
+
+  @override
+  String get savePresetTooltip =>
+      'Save current settings to appimage_studio.yaml in project folder';
+
+  @override
+  String get savePresetSuccess => 'Configuration saved to appimage_studio.yaml';
+
+  @override
+  String get loadPresetButton => 'Load Preset';
+
+  @override
+  String get presetLoaded => 'Project configuration loaded from preset';
+
+  @override
+  String get exportBuildScriptButton => 'Export Build Script';
+
+  @override
+  String get exportBuildScriptTooltip =>
+      'Generate a standalone build_appimage.sh terminal script';
+
+  @override
+  String get exportBuildScriptSuccess =>
+      'Build script created: build_appimage.sh';
+
+  @override
+  String get dragAndDropPrompt => 'Drop folder or app icon here';
+
+  @override
+  String get dragAndDropSubtitle =>
+      'Drag and drop your project bundle or icon to populate fields instantly';
+
+  @override
+  String projectDetectedNotification(String type) {
+    return 'Smart project detected: $type';
+  }
+
+  @override
+  String get livePreviewTitle => 'Live Desktop Preview';
+
+  @override
+  String get livePreviewSubtitle =>
+      'Real-time preview of launcher icon, menu entry and AppImage filename';
+
+  @override
+  String get liveBadge => 'LIVE';
 }

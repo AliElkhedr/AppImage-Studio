@@ -20,7 +20,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get switchLanguage => 'تغيير اللغة';
 
   @override
-  String get appVersion => 'v1.0.0';
+  String get appVersion => 'v1.1.0';
 
   @override
   String get developedBy => 'تطوير بكل ❤️ بواسطة علي الخضر والمساهمين';
@@ -193,4 +193,68 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get licenseNotice => 'الترخيص: مفتوح المصدر بموجب رخصة GNU GPLv3';
+
+  @override
+  String get copyLogsTooltip => 'نسخ سجل البناء إلى الحافظة';
+
+  @override
+  String get exportLogsTooltip => 'تصدير السجل كملف نصي';
+
+  @override
+  String get logsCopied => 'تم نسخ سجل البناء إلى الحافظة بنجاح!';
+
+  @override
+  String logsExported(String path) {
+    return 'تم حفظ السجل في: $path';
+  }
+
+  @override
+  String get savePresetButton => 'حفظ القالب';
+
+  @override
+  String get savePresetTooltip =>
+      'حفظ إعدادات المشروع الحالية في ملف appimage_studio.yaml';
+
+  @override
+  String get savePresetSuccess =>
+      'تم حفظ إعدادات المشروع في ملف appimage_studio.yaml';
+
+  @override
+  String get loadPresetButton => 'تحميل قالب';
+
+  @override
+  String get presetLoaded => 'تم تحميل إعدادات المشروع من القالب بنجاح';
+
+  @override
+  String get exportBuildScriptButton => 'تصدير سكربت البناء';
+
+  @override
+  String get exportBuildScriptTooltip =>
+      'توليد سكربت build_appimage.sh للطرفية';
+
+  @override
+  String get exportBuildScriptSuccess =>
+      'تم إنشاء سكربت البناء: build_appimage.sh';
+
+  @override
+  String get dragAndDropPrompt => 'أسقط مجلد التطبيق أو ملف الأيقونة هنا';
+
+  @override
+  String get dragAndDropSubtitle =>
+      'اسحب وأسقط حزمة المشروع أو الصورة لتعبئة البيانات تلقائياً';
+
+  @override
+  String projectDetectedNotification(String type) {
+    return 'تم التعرف الذكي على المشروع: $type';
+  }
+
+  @override
+  String get livePreviewTitle => 'معاينة سطح المكتب الحية';
+
+  @override
+  String get livePreviewSubtitle =>
+      'معاينة فورية لمظهر الأيقونة، واختصار النظام، واسم ملف الحزمة';
+
+  @override
+  String get liveBadge => 'مباشر';
 }
