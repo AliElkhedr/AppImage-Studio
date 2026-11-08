@@ -67,7 +67,9 @@
   "contributorsButton": "قائمة المساهمين على GitHub",
   "licenseNotice": "الترخيص: مفتوح المصدر بموجب رخصة GNU GPLv3",
 
+  "copyLogs": "نسخ السجل",
   "copyLogsTooltip": "نسخ سجل البناء إلى الحافظة",
+  "exportLogs": "تصدير السجل",
   "exportLogsTooltip": "تصدير السجل كملف نصي",
   "logsCopied": "تم نسخ سجل البناء إلى الحافظة بنجاح!",
   "logsExported": "تم حفظ السجل في: {path}",
@@ -87,5 +89,14 @@
   "projectDetectedNotification": "تم التعرف الذكي على المشروع: {type}",
   "livePreviewTitle": "معاينة سطح المكتب الحية",
   "livePreviewSubtitle": "معاينة فورية لمظهر الأيقونة، واختصار النظام، واسم ملف الحزمة",
-  "liveBadge": "مباشر"
+  "liveBadge": "مباشر",
+  "dragDropSuccess": "تم استيراد الحزمة بنجاح: {name}",
+  "@dragDropSuccess": {
+    "description": "تنبيه عند إفلات المجلد أو الملفات",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

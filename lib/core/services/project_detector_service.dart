@@ -23,7 +23,7 @@ class ProjectDetectionResult {
   final String? bundlePath;
   final String? iconPath;
   final AppCategory? category;
-  final String summary;
+  final String? frameworkName;
   final AppMetadata? loadedPreset;
 
   const ProjectDetectionResult({
@@ -35,7 +35,7 @@ class ProjectDetectionResult {
     this.bundlePath,
     this.iconPath,
     this.category,
-    required this.summary,
+    this.frameworkName,
     this.loadedPreset,
   });
 }
@@ -47,7 +47,6 @@ class ProjectDetectorService {
     if (!await dir.exists()) {
       return const ProjectDetectionResult(
         type: DetectedProjectType.generic,
-        summary: 'المسار غير صالح',
       );
     }
 
@@ -64,7 +63,7 @@ class ProjectDetectorService {
           bundlePath: preset.bundlePath.isNotEmpty ? preset.bundlePath : path,
           iconPath: preset.iconPath,
           category: preset.category,
-          summary: 'تم تحميل قالب المشروع المحفوظ (appimage_studio.yaml)',
+          frameworkName: 'Preset (appimage_studio.yaml)',
           loadedPreset: preset,
         );
       }
@@ -90,7 +89,6 @@ class ProjectDetectorService {
     return ProjectDetectionResult(
       type: DetectedProjectType.generic,
       bundlePath: path,
-      summary: 'مجلد تطبيق عام',
     );
   }
 
@@ -166,7 +164,7 @@ class ProjectDetectorService {
         bundlePath: bundlePath,
         iconPath: iconPath,
         category: AppCategory.development,
-        summary: 'مشروع Flutter مكتشف تلقائياً',
+        frameworkName: 'Flutter',
       );
     } catch (_) {
       return null;
@@ -218,7 +216,7 @@ class ProjectDetectorService {
         description: description,
         bundlePath: bundlePath,
         category: AppCategory.development,
-        summary: 'مشروع Rust (Cargo) مكتشف تلقائياً',
+        frameworkName: 'Rust (Cargo)',
       );
     } catch (_) {
       return null;
@@ -252,7 +250,7 @@ class ProjectDetectorService {
         description: description,
         bundlePath: bundlePath,
         category: AppCategory.utility,
-        summary: 'مشروع Electron / Node مكتشف تلقائياً',
+        frameworkName: 'Electron',
       );
     } catch (_) {
       return null;
@@ -280,7 +278,7 @@ class ProjectDetectorService {
         version: '1.0.0',
         bundlePath: path,
         category: AppCategory.game,
-        summary: 'مشروع ألعاب Godot مكتشف تلقائياً',
+        frameworkName: 'Godot Engine',
       );
     } catch (_) {
       return null;
@@ -295,7 +293,6 @@ class ProjectDetectorService {
 
   static String _formatAppName(String name) {
     if (name.isEmpty) return '';
-    // Replace underscores and hyphens with spaces and capitalize words
     final words = name.replaceAll('_', ' ').replaceAll('-', ' ').split(' ');
     return words.map((w) {
       if (w.isEmpty) return '';
@@ -303,4 +300,3 @@ class ProjectDetectorService {
     }).join(' ');
   }
 }
-

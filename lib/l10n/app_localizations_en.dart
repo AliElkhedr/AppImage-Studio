@@ -197,7 +197,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseNotice => 'License: Open Source under GNU GPLv3';
 
   @override
+  String get copyLogs => 'Copy Logs';
+
+  @override
   String get copyLogsTooltip => 'Copy build logs to clipboard';
+
+  @override
+  String get exportLogs => 'Export Logs';
 
   @override
   String get exportLogsTooltip => 'Export logs to text file';
@@ -258,4 +264,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveBadge => 'LIVE';
+
+  @override
+  String dragDropSuccess(String name) {
+    return 'Successfully loaded: $name';
+  }
 }

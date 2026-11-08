@@ -9,6 +9,7 @@ class DesktopIntegratorService {
     required AppMetadata metadata,
     required String appImagePath,
     Function(BuildLogEntry)? onLog,
+    bool isArabic = false,
   }) async {
     try {
       final home = Platform.environment['HOME'] ?? '';
@@ -74,12 +75,16 @@ StartupNotify=true
       } catch (_) {}
 
       onLog?.call(BuildLogEntry(
-        'تم تثبيت التطبيق بنجاح في قائمة البرامج: ${desktopFile.path}',
+        isArabic
+            ? 'تم تثبيت التطبيق بنجاح في قائمة البرامج: ${desktopFile.path}'
+            : 'Application shortcut installed to desktop menu: ${desktopFile.path}',
         level: LogLevel.success,
       ));
     } catch (e) {
       onLog?.call(BuildLogEntry(
-        'تعذر التثبيت في قائمة البرامج: $e',
+        isArabic
+            ? 'تعذر التثبيت في قائمة البرامج: $e'
+            : 'Failed to integrate with desktop menu: $e',
         level: LogLevel.warning,
       ));
     }

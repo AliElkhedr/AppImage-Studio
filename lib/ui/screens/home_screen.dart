@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<String> _detectedExecutables = [];
   bool _isDragging = false;
+  DateTime _lastDropProcessedTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   void initState() {
@@ -50,6 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       _metadata.outputPath = home;
     }
+
+    // Direct platform drop event listener (bypasses widget hit-testing and GTK timing issues)
+    DesktopDrop.instance.init();
+    DesktopDrop.instance.addRawDropEventListener(_onRawDropEvent);
 
     // Attach listeners so LivePreviewCard updates live as the user types
     _appNameController.addListener(() {
@@ -76,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    DesktopDrop.instance.removeRawDropEventListener(_onRawDropEvent);
     _appNameController.dispose();
     _executableController.dispose();
     _versionController.dispose();
@@ -130,23 +136,200 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _handleDroppedPath(String path) async {
-    final type = await FileSystemEntity.type(path);
-    if (type == FileSystemEntityType.directory) {
-      await _onBundlePathSelected(path);
-    } else if (type == FileSystemEntityType.file) {
-      final ext = p.extension(path).toLowerCase();
-      if (['.png', '.svg', '.jpg', '.jpeg'].contains(ext)) {
-        setState(() {
-          _metadata.iconPath = path;
-        });
-      } else if (p.basename(path) == 'appimage_studio.yaml' || ext == '.yaml') {
-        final preset = await PresetService.loadPreset(p.dirname(path));
-        if (preset != null) {
-          _applyLoadedPreset(preset);
+  String _sanitizePath(String raw) {
+    String clean = raw.trim();
+    if (clean.startsWith('file://')) {
+      try {
+        clean = Uri.parse(clean).toFilePath();
+      } catch (_) {
+        clean = clean.replaceFirst('file://', '');
+      }
+    }
+    try {
+      if (clean.contains('%')) {
+        clean = Uri.decodeFull(clean);
+      }
+    } catch (_) {}
+    if (clean.length > 1 && clean.endsWith('/')) {
+      clean = clean.substring(0, clean.length - 1);
+    }
+    return clean;
+  }
+
+  void _onRawDropEvent(DropEvent event) {
+    if (event is DropEnterEvent || event is DropUpdateEvent) {
+      if (!_isDragging && mounted) {
+        setState(() => _isDragging = true);
+      }
+    } else if (event is DropExitEvent) {
+      if (_isDragging && mounted) {
+        setState(() => _isDragging = false);
+      }
+    } else if (event is DropDoneEvent) {
+      if (_isDragging && mounted) {
+        setState(() => _isDragging = false);
+      }
+      _handleRawDrop(event.files, event.rawText);
+    }
+  }
+
+  Future<void> _handleDroppedDetails(DropDoneDetails details) async {
+    await _handleRawDrop(details.files, details.rawText);
+  }
+
+  Future<void> _handleRawDrop(List<DropItem> items, String? rawText) async {
+    final now = DateTime.now();
+    if (now.difference(_lastDropProcessedTime).inMilliseconds < 400) {
+      return; // Deduplicate between raw listener and DropTarget callback
+    }
+    _lastDropProcessedTime = now;
+
+    final rawList = <String>[];
+
+    // 1. Collect from DropItem files
+    for (final item in items) {
+      if (item.path.isNotEmpty) {
+        rawList.add(item.path);
+      }
+    }
+
+    // 2. Collect from rawText payload (essential on Linux for non-schemed or portal paths)
+    if (rawText != null && rawText.isNotEmpty) {
+      final lines = rawText.split(RegExp(r'[\r\n]+'));
+      for (final line in lines) {
+        if (line.trim().isNotEmpty) {
+          rawList.add(line.trim());
         }
       }
     }
+
+    final sanitizedPaths = rawList.map(_sanitizePath).where((p) => p.isNotEmpty).toSet().toList();
+    if (sanitizedPaths.isEmpty) return;
+
+    // Check what was dropped:
+    // 1. Did the user drop one or more directories?
+    final directories = sanitizedPaths.where((path) => Directory(path).existsSync()).toList();
+    if (directories.isNotEmpty) {
+      final chosenDir = directories.first;
+      await _onBundlePathSelected(chosenDir);
+      _showDropSuccessFeedback(p.basename(chosenDir));
+      return;
+    }
+
+    // 2. All dropped items are files
+    final files = sanitizedPaths.where((path) => File(path).existsSync()).toList();
+    if (files.isEmpty) return;
+
+    // Case A: User dropped an appimage_studio.yaml preset file
+    final presetFile = files.firstWhere(
+      (f) => p.basename(f) == 'appimage_studio.yaml' || f.endsWith('.yaml'),
+      orElse: () => '',
+    );
+    if (presetFile.isNotEmpty && p.basename(presetFile) == 'appimage_studio.yaml') {
+      final preset = await PresetService.loadPreset(p.dirname(presetFile));
+      if (preset != null) {
+        _applyLoadedPreset(preset);
+        _showDropSuccessFeedback(p.basename(presetFile));
+        return;
+      }
+    }
+
+    // Case B: User dropped an image file ONLY (.png, .svg, .jpg, .jpeg)
+    final imageFiles = files.where((f) {
+      final ext = p.extension(f).toLowerCase();
+      return ['.png', '.svg', '.jpg', '.jpeg'].contains(ext);
+    }).toList();
+
+    if (files.length == 1 && imageFiles.isNotEmpty) {
+      setState(() {
+        _metadata.iconPath = imageFiles.first;
+      });
+      _showDropSuccessFeedback(p.basename(imageFiles.first));
+      return;
+    }
+
+    // Case C: User dropped the contents of a bundle folder ("ما بدخله")
+    final parentDir = p.dirname(files.first);
+    if (Directory(parentDir).existsSync()) {
+      await _onBundlePathSelected(parentDir);
+
+      if (imageFiles.isNotEmpty) {
+        setState(() {
+          _metadata.iconPath = imageFiles.first;
+        });
+      }
+
+      for (final file in files) {
+        if (await _isExecutableCandidate(File(file))) {
+          final filename = p.basename(file);
+          setState(() {
+            _executableController.text = filename;
+            _metadata.executableName = filename;
+          });
+          break;
+        }
+      }
+      _showDropSuccessFeedback(p.basename(parentDir));
+    }
+  }
+
+  void _showDropSuccessFeedback(String name) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final message = l10n != null ? l10n.dragDropSuccess(name) : 'Loaded $name';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Color(0xFF00E676), size: 20),
+            const SizedBox(width: 10),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: const Color(0xFF161E2E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: Color(0xFF00E676), width: 1.5),
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<bool> _isExecutableCandidate(File file) async {
+    final ext = p.extension(file.path).toLowerCase();
+    const nonExecExts = {
+      '.png', '.svg', '.jpg', '.jpeg', '.gif', '.ico',
+      '.desktop', '.md', '.yaml', '.yml', '.xml', '.html',
+      '.so', '.a', '.dylib', '.dll', '.json', '.txt', '.log',
+      '.css', '.js', '.ts', '.map', '.c', '.cpp', '.h', '.dart'
+    };
+    if (nonExecExts.contains(ext)) return false;
+
+    try {
+      final stat = await file.stat();
+      if (stat.mode & 0x49 != 0) return true;
+
+      // Check ELF magic bytes (0x7F 'E' 'L' 'F') or Shebang ('#' '!')
+      final raf = await file.open(mode: FileMode.read);
+      try {
+        final header = await raf.read(4);
+        if (header.length >= 4 &&
+            header[0] == 0x7F &&
+            header[1] == 0x45 &&
+            header[2] == 0x4C &&
+            header[3] == 0x46) {
+          return true;
+        }
+        if (header.length >= 2 && header[0] == 0x23 && header[1] == 0x21) {
+          return true;
+        }
+      } finally {
+        await raf.close();
+      }
+    } catch (_) {}
+    return false;
   }
 
   Future<void> _onBundlePathSelected(String path) async {
@@ -201,13 +384,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     if (mounted && detection.type != DetectedProjectType.generic) {
+      final l10n = AppLocalizations.of(context)!;
+      final message = detection.type == DetectedProjectType.preset
+          ? l10n.presetLoaded
+          : l10n.projectDetectedNotification(detection.frameworkName ?? detection.type.name);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
               const Icon(Icons.bolt, color: AppTheme.primaryCyan, size: 20),
               const SizedBox(width: 8),
-              Expanded(child: Text(detection.summary)),
+              Expanded(child: Text(message)),
             ],
           ),
           backgroundColor: const Color(0xFF161E2E),
@@ -229,12 +417,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       await for (final entity in dir.list(recursive: false)) {
         if (entity is File) {
-          final filename = p.basename(entity.path);
-          if (!filename.endsWith('.so') && !filename.endsWith('.json') && !filename.endsWith('.txt')) {
-            final stat = await entity.stat();
-            if (stat.mode & 0x49 != 0) {
-              executables.add(filename);
-            }
+          if (await _isExecutableCandidate(entity)) {
+            executables.add(p.basename(entity.path));
           }
         }
       }
@@ -356,8 +540,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final builderService = AppImageBuilderService();
-    final buildFuture = builderService.build(_metadata);
+    final buildFuture = builderService.build(_metadata, isArabic: isArabic);
 
     showDialog(
       context: context,
@@ -377,9 +562,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onDragExited: (_) => setState(() => _isDragging = false),
         onDragDone: (details) async {
           setState(() => _isDragging = false);
-          if (details.files.isNotEmpty) {
-            await _handleDroppedPath(details.files.first.path);
-          }
+          await _handleDroppedDetails(details);
         },
         child: Stack(
           children: [
@@ -413,7 +596,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            if (_isDragging) _buildDragOverlay(),
+            if (_isDragging)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: _buildDragOverlay(),
+                ),
+              ),
           ],
         ),
       ),
@@ -695,9 +883,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
+                          key: ValueKey('exec_dd_${_executableController.text}'),
                           initialValue: _detectedExecutables.contains(_executableController.text)
                               ? _executableController.text
-                              : _detectedExecutables.first,
+                              : (_detectedExecutables.isNotEmpty ? _detectedExecutables.first : null),
                           isExpanded: true,
                           decoration: const InputDecoration(
                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),

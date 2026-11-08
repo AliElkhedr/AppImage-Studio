@@ -195,7 +195,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get licenseNotice => 'الترخيص: مفتوح المصدر بموجب رخصة GNU GPLv3';
 
   @override
+  String get copyLogs => 'نسخ السجل';
+
+  @override
   String get copyLogsTooltip => 'نسخ سجل البناء إلى الحافظة';
+
+  @override
+  String get exportLogs => 'تصدير السجل';
 
   @override
   String get exportLogsTooltip => 'تصدير السجل كملف نصي';
@@ -257,4 +263,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get liveBadge => 'مباشر';
+
+  @override
+  String dragDropSuccess(String name) {
+    return 'تم استيراد الحزمة بنجاح: $name';
+  }
 }

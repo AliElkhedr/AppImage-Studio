@@ -37,10 +37,14 @@ class AppImageToolService {
   /// Ensures appimagetool is ready (checks cache/PATH -> extracts bundled asset -> downloads if needed)
   static Future<String> ensureToolAvailable({
     Function(BuildLogEntry)? onLog,
+    bool isArabic = false,
   }) async {
     final existing = await findExistingTool();
     if (existing != null) {
-      onLog?.call(BuildLogEntry('تم العثور على أداة appimagetool في: $existing', level: LogLevel.info));
+      onLog?.call(BuildLogEntry(
+        isArabic ? 'تم العثور على أداة appimagetool في: $existing' : 'Found appimagetool at: $existing',
+        level: LogLevel.info,
+      ));
       return existing;
     }
 
@@ -51,7 +55,9 @@ class AppImageToolService {
     // 1. Try extracting bundled asset (100% Offline)
     try {
       onLog?.call(BuildLogEntry(
-        'جاري استخراج أداة appimagetool المدمجة بالتطبيق (بدون إنترنت)...',
+        isArabic
+            ? 'جاري استخراج أداة appimagetool المدمجة بالتطبيق (بدون إنترنت)...'
+            : 'Extracting bundled offline appimagetool binary...',
         level: LogLevel.info,
       ));
       final byteData = await rootBundle.load(_assetPath);
@@ -60,13 +66,17 @@ class AppImageToolService {
       await Process.run('chmod', ['+x', localPath]);
 
       onLog?.call(BuildLogEntry(
-        'تم استخراج appimagetool بنجاح وجاهزة للاستخدام.',
+        isArabic
+            ? 'تم استخراج appimagetool بنجاح وجاهزة للاستخدام.'
+            : 'appimagetool extracted successfully and ready.',
         level: LogLevel.success,
       ));
       return localPath;
     } catch (assetError) {
       onLog?.call(BuildLogEntry(
-        'تعذر الاستخراج من الحزمة المدمجة ($assetError)، جاري محاولة التنزيل عبر الإنترنت...',
+        isArabic
+            ? 'تعذر الاستخراج من الحزمة المدمجة ($assetError)، جاري محاولة التنزيل عبر الإنترنت...'
+            : 'Could not extract from bundled asset ($assetError), trying download...',
         level: LogLevel.warning,
       ));
     }
@@ -78,15 +88,20 @@ class AppImageToolService {
         await localFile.writeAsBytes(response.bodyBytes);
         await Process.run('chmod', ['+x', localPath]);
         onLog?.call(BuildLogEntry(
-          'تم تنزيل appimagetool بنجاح وضبط الصلاحيات التنفيذية.',
+          isArabic
+              ? 'تم تنزيل appimagetool بنجاح وضبط الصلاحيات التنفيذية.'
+              : 'appimagetool downloaded successfully and set executable.',
           level: LogLevel.success,
         ));
         return localPath;
       } else {
-        throw Exception('فشل التنزيل برمز استجابة: ${response.statusCode}');
+        throw Exception(isArabic ? 'فشل التنزيل برمز استجابة: ${response.statusCode}' : 'Download failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      onLog?.call(BuildLogEntry('خطأ أثناء تجهيز appimagetool: $e', level: LogLevel.error));
+      onLog?.call(BuildLogEntry(
+        isArabic ? 'خطأ أثناء تجهيز appimagetool: $e' : 'Error preparing appimagetool: $e',
+        level: LogLevel.error,
+      ));
       rethrow;
     }
   }

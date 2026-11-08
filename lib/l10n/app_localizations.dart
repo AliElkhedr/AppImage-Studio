@@ -446,11 +446,23 @@ abstract class AppLocalizations {
   /// **'License: Open Source under GNU GPLv3'**
   String get licenseNotice;
 
+  /// No description provided for @copyLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Logs'**
+  String get copyLogs;
+
   /// No description provided for @copyLogsTooltip.
   ///
   /// In en, this message translates to:
   /// **'Copy build logs to clipboard'**
   String get copyLogsTooltip;
+
+  /// No description provided for @exportLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Logs'**
+  String get exportLogs;
 
   /// No description provided for @exportLogsTooltip.
   ///
@@ -553,6 +565,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LIVE'**
   String get liveBadge;
+
+  /// Notification when files or folder are dropped
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully loaded: {name}'**
+  String dragDropSuccess(String name);
 }
 
 class _AppLocalizationsDelegate

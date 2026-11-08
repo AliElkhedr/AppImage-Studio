@@ -28,7 +28,9 @@ class LivePreviewCard extends StatelessWidget {
         ? metadata.description
         : l10n.descriptionHint;
     final cleanName = metadata.appName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_');
-    final filename = cleanName.isNotEmpty ? '$cleanName-$displayVersion-x86_64.AppImage' : 'app-1.0.0-x86_64.AppImage';
+    final filename = cleanName.isNotEmpty
+        ? (displayVersion.isNotEmpty ? '$cleanName-$displayVersion.AppImage' : '$cleanName.AppImage')
+        : 'app-1.0.0.AppImage';
 
     return Card(
       child: Padding(
@@ -42,7 +44,7 @@ class LivePreviewCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'معاينة سطح المكتب الحية (Live Desktop Preview)',
+                    l10n.livePreviewTitle,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -66,7 +68,7 @@ class LivePreviewCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'مباشر',
+                        l10n.liveBadge,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,

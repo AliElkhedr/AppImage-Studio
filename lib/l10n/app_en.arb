@@ -77,7 +77,9 @@
   "contributorsButton": "Contributors on GitHub",
   "licenseNotice": "License: Open Source under GNU GPLv3",
 
+  "copyLogs": "Copy Logs",
   "copyLogsTooltip": "Copy build logs to clipboard",
+  "exportLogs": "Export Logs",
   "exportLogsTooltip": "Export logs to text file",
   "logsCopied": "Build logs copied to clipboard!",
   "logsExported": "Logs exported to {path}",
@@ -107,5 +109,14 @@
   },
   "livePreviewTitle": "Live Desktop Preview",
   "livePreviewSubtitle": "Real-time preview of launcher icon, menu entry and AppImage filename",
-  "liveBadge": "LIVE"
+  "liveBadge": "LIVE",
+  "dragDropSuccess": "Successfully loaded: {name}",
+  "@dragDropSuccess": {
+    "description": "Notification when files or folder are dropped",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
