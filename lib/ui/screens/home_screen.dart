@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'package:desktop_drop/desktop_drop.dart';
 import '../../core/models/app_metadata.dart';
 import '../../core/services/appimage_builder_service.dart';
 import '../../core/services/preset_service.dart';
@@ -40,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> _detectedExecutables = [];
   bool _isDragging = false;
   DateTime _lastDropProcessedTime = DateTime.fromMillisecondsSinceEpoch(0);
+  static const MethodChannel _nativeDropChannel = MethodChannel('appimage_studio/native_drop');
 
   @override
   void initState() {
@@ -52,9 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _metadata.outputPath = home;
     }
 
-    // Direct platform drop event listener (bypasses widget hit-testing and GTK timing issues)
-    DesktopDrop.instance.init();
-    DesktopDrop.instance.addRawDropEventListener(_onRawDropEvent);
+    // Native GTK3 drag-and-drop channel
+    _nativeDropChannel.setMethodCallHandler(_handleNativeDropCall);
 
     // Attach listeners so LivePreviewCard updates live as the user types
     _appNameController.addListener(() {
@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    DesktopDrop.instance.removeRawDropEventListener(_onRawDropEvent);
+    _nativeDropChannel.setMethodCallHandler(null);
     _appNameController.dispose();
     _executableController.dispose();
     _versionController.dispose();
@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _metadata.description = _descriptionController.text.trim();
   }
 
-  void _applyLoadedPreset(AppMetadata preset) {
+  Future<void> _applyLoadedPreset(AppMetadata preset) async {
     setState(() {
       _metadata.appName = preset.appName;
       _metadata.executableName = preset.executableName;
@@ -114,9 +114,15 @@ class _HomeScreenState extends State<HomeScreen> {
       _executableController.text = preset.executableName;
       _versionController.text = preset.version;
       _descriptionController.text = preset.description;
-
-      _scanForExecutables(preset.bundlePath);
     });
+
+    await _scanForExecutables(preset.bundlePath);
+    if (preset.executableName.isNotEmpty) {
+      setState(() {
+        _executableController.text = preset.executableName;
+        _metadata.executableName = preset.executableName;
+      });
+    }
 
     if (mounted) {
       final l10n = AppLocalizations.of(context)!;
@@ -138,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _sanitizePath(String raw) {
     String clean = raw.trim();
+    if (clean.isEmpty || clean.startsWith('#')) return '';
     if (clean.startsWith('file://')) {
       try {
         clean = Uri.parse(clean).toFilePath();
@@ -156,121 +163,155 @@ class _HomeScreenState extends State<HomeScreen> {
     return clean;
   }
 
-  void _onRawDropEvent(DropEvent event) {
-    if (event is DropEnterEvent || event is DropUpdateEvent) {
-      if (!_isDragging && mounted) {
-        setState(() => _isDragging = true);
-      }
-    } else if (event is DropExitEvent) {
-      if (_isDragging && mounted) {
-        setState(() => _isDragging = false);
-      }
-    } else if (event is DropDoneEvent) {
-      if (_isDragging && mounted) {
-        setState(() => _isDragging = false);
-      }
-      _handleRawDrop(event.files, event.rawText);
+  Future<dynamic> _handleNativeDropCall(MethodCall call) async {
+    switch (call.method) {
+      case 'dragEntered':
+        if (!_isDragging && mounted) {
+          setState(() => _isDragging = true);
+        }
+        break;
+      case 'dragExited':
+        if (_isDragging && mounted) {
+          setState(() => _isDragging = false);
+        }
+        break;
+      case 'dragDropped':
+        if (_isDragging && mounted) {
+          setState(() => _isDragging = false);
+        }
+        final List<dynamic> args = (call.arguments as List<dynamic>?) ?? const [];
+        final rawStrings = args.map((e) => e.toString()).toList();
+        await _processDroppedPayload(rawStrings);
+        break;
     }
   }
 
-  Future<void> _handleDroppedDetails(DropDoneDetails details) async {
-    await _handleRawDrop(details.files, details.rawText);
-  }
-
-  Future<void> _handleRawDrop(List<DropItem> items, String? rawText) async {
+  Future<void> _processDroppedPayload(List<String> rawInputs) async {
     final now = DateTime.now();
     if (now.difference(_lastDropProcessedTime).inMilliseconds < 400) {
-      return; // Deduplicate between raw listener and DropTarget callback
+      return; // Deduplicate between native channel, raw listener and DropTarget callback
     }
     _lastDropProcessedTime = now;
 
-    final rawList = <String>[];
-
-    // 1. Collect from DropItem files
-    for (final item in items) {
-      if (item.path.isNotEmpty) {
-        rawList.add(item.path);
-      }
-    }
-
-    // 2. Collect from rawText payload (essential on Linux for non-schemed or portal paths)
-    if (rawText != null && rawText.isNotEmpty) {
-      final lines = rawText.split(RegExp(r'[\r\n]+'));
-      for (final line in lines) {
+    final expandedLines = <String>[];
+    for (final input in rawInputs) {
+      for (final line in input.split(RegExp(r'[\r\n]+'))) {
         if (line.trim().isNotEmpty) {
-          rawList.add(line.trim());
+          expandedLines.add(line.trim());
         }
       }
     }
 
-    final sanitizedPaths = rawList.map(_sanitizePath).where((p) => p.isNotEmpty).toSet().toList();
+    final sanitizedPaths = expandedLines
+        .map(_sanitizePath)
+        .where((path) => path.isNotEmpty && (Directory(path).existsSync() || File(path).existsSync()))
+        .toSet()
+        .toList();
     if (sanitizedPaths.isEmpty) return;
 
-    // Check what was dropped:
-    // 1. Did the user drop one or more directories?
     final directories = sanitizedPaths.where((path) => Directory(path).existsSync()).toList();
-    if (directories.isNotEmpty) {
-      final chosenDir = directories.first;
-      await _onBundlePathSelected(chosenDir);
-      _showDropSuccessFeedback(p.basename(chosenDir));
-      return;
-    }
-
-    // 2. All dropped items are files
     final files = sanitizedPaths.where((path) => File(path).existsSync()).toList();
-    if (files.isEmpty) return;
 
-    // Case A: User dropped an appimage_studio.yaml preset file
-    final presetFile = files.firstWhere(
-      (f) => p.basename(f) == 'appimage_studio.yaml' || f.endsWith('.yaml'),
-      orElse: () => '',
-    );
-    if (presetFile.isNotEmpty && p.basename(presetFile) == 'appimage_studio.yaml') {
-      final preset = await PresetService.loadPreset(p.dirname(presetFile));
-      if (preset != null) {
-        _applyLoadedPreset(preset);
-        _showDropSuccessFeedback(p.basename(presetFile));
+    // Case 1: Multiple items dropped (e.g. user opened the bundle folder, selected all contents "ما بدخله"
+    // such as [executable, data/, lib/], and dropped them together).
+    if (sanitizedPaths.length > 1) {
+      final parentDir = p.dirname(sanitizedPaths.first);
+      if (Directory(parentDir).existsSync()) {
+        await _onBundlePathSelected(parentDir);
+
+        final imageFiles = files.where((f) {
+          final ext = p.extension(f).toLowerCase();
+          return ['.png', '.svg', '.jpg', '.jpeg'].contains(ext);
+        }).toList();
+
+        if (imageFiles.isNotEmpty) {
+          setState(() {
+            _metadata.iconPath = imageFiles.first;
+          });
+        }
+
+        for (final file in files) {
+          if (await _isExecutableCandidate(File(file))) {
+            final filename = p.basename(file);
+            setState(() {
+              _executableController.text = filename;
+              _metadata.executableName = filename;
+            });
+            break;
+          }
+        }
+        _showDropSuccessFeedback(p.basename(parentDir));
         return;
       }
     }
 
-    // Case B: User dropped an image file ONLY (.png, .svg, .jpg, .jpeg)
-    final imageFiles = files.where((f) {
-      final ext = p.extension(f).toLowerCase();
-      return ['.png', '.svg', '.jpg', '.jpeg'].contains(ext);
-    }).toList();
-
-    if (files.length == 1 && imageFiles.isNotEmpty) {
-      setState(() {
-        _metadata.iconPath = imageFiles.first;
-      });
-      _showDropSuccessFeedback(p.basename(imageFiles.first));
+    // Case 2: A single directory was dropped ("المجلد كاملاً")
+    if (directories.length == 1 && files.isEmpty) {
+      String targetDir = directories.first;
+      final base = p.basename(targetDir).toLowerCase();
+      // If user accidentally dropped a 'data' or 'lib' subfolder of a bundle, step up to the bundle parent
+      if ((base == 'data' || base == 'lib') && Directory(p.dirname(targetDir)).existsSync()) {
+        final parent = p.dirname(targetDir);
+        final parentHasExec = await _directoryHasExecutable(parent);
+        if (parentHasExec) {
+          targetDir = parent;
+        }
+      }
+      await _onBundlePathSelected(targetDir);
+      _showDropSuccessFeedback(p.basename(targetDir));
       return;
     }
 
-    // Case C: User dropped the contents of a bundle folder ("ما بدخله")
-    final parentDir = p.dirname(files.first);
+    // Case 3: A single file was dropped
+    if (files.isEmpty) return;
+    final singleFile = files.first;
+    final fileName = p.basename(singleFile);
+    final ext = p.extension(singleFile).toLowerCase();
+
+    // Case 3A: Preset YAML file
+    if (fileName == 'appimage_studio.yaml' || ext == '.yaml' || ext == '.yml') {
+      final preset = await PresetService.loadPreset(p.dirname(singleFile));
+      if (preset != null) {
+        await _applyLoadedPreset(preset);
+        _showDropSuccessFeedback(fileName);
+        return;
+      }
+    }
+
+    // Case 3B: Image icon file
+    if (['.png', '.svg', '.jpg', '.jpeg'].contains(ext)) {
+      setState(() {
+        _metadata.iconPath = singleFile;
+      });
+      _showDropSuccessFeedback(fileName);
+      return;
+    }
+
+    // Case 3C: Single executable or bundle file dropped from inside the folder
+    final parentDir = p.dirname(singleFile);
     if (Directory(parentDir).existsSync()) {
       await _onBundlePathSelected(parentDir);
-
-      if (imageFiles.isNotEmpty) {
+      if (await _isExecutableCandidate(File(singleFile))) {
         setState(() {
-          _metadata.iconPath = imageFiles.first;
+          _executableController.text = fileName;
+          _metadata.executableName = fileName;
         });
-      }
-
-      for (final file in files) {
-        if (await _isExecutableCandidate(File(file))) {
-          final filename = p.basename(file);
-          setState(() {
-            _executableController.text = filename;
-            _metadata.executableName = filename;
-          });
-          break;
-        }
       }
       _showDropSuccessFeedback(p.basename(parentDir));
     }
+  }
+
+  Future<bool> _directoryHasExecutable(String dirPath) async {
+    final dir = Directory(dirPath);
+    if (!await dir.exists()) return false;
+    try {
+      await for (final entity in dir.list(recursive: false)) {
+        if (entity is File && await _isExecutableCandidate(entity)) {
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
   }
 
   void _showDropSuccessFeedback(String name) {
@@ -336,20 +377,27 @@ class _HomeScreenState extends State<HomeScreen> {
     // 1. Run smart project detector
     final detection = await ProjectDetectorService.detect(path);
 
-    setState(() {
-      if (detection.loadedPreset != null) {
-        _applyLoadedPreset(detection.loadedPreset!);
-        return;
-      }
+    if (detection.loadedPreset != null) {
+      await _applyLoadedPreset(detection.loadedPreset!);
+      return;
+    }
 
-      _metadata.bundlePath = detection.bundlePath ?? path;
+    final effectiveBundlePath = detection.bundlePath ?? path;
+    const genericDirNames = {
+      'bundle', 'release', 'debug', 'x64', 'arm64', 'linux', 'build', 'dist', 'desktop', 'appdir'
+    };
+
+    setState(() {
+      _metadata.bundlePath = effectiveBundlePath;
 
       if (detection.appName != null && detection.appName!.isNotEmpty) {
         _appNameController.text = detection.appName!;
         _metadata.appName = detection.appName!;
       } else {
-        final dirName = p.basename(path);
-        final candidateName = dirName == 'bundle' ? p.basename(p.dirname(path)) : dirName;
+        final dirName = p.basename(effectiveBundlePath);
+        final candidateName = genericDirNames.contains(dirName.toLowerCase())
+            ? p.basename(p.dirname(effectiveBundlePath))
+            : dirName;
         _appNameController.text = candidateName;
         _metadata.appName = candidateName;
       }
@@ -357,11 +405,17 @@ class _HomeScreenState extends State<HomeScreen> {
       if (detection.executableName != null && detection.executableName!.isNotEmpty) {
         _executableController.text = detection.executableName!;
         _metadata.executableName = detection.executableName!;
+      } else {
+        _executableController.clear();
+        _metadata.executableName = '';
       }
 
       if (detection.version != null && detection.version!.isNotEmpty) {
         _versionController.text = detection.version!;
         _metadata.version = detection.version!;
+      } else if (_versionController.text.trim().isEmpty) {
+        _versionController.text = '1.0.0';
+        _metadata.version = '1.0.0';
       }
 
       if (detection.description != null && detection.description!.isNotEmpty) {
@@ -373,15 +427,31 @@ class _HomeScreenState extends State<HomeScreen> {
         _metadata.category = detection.category!;
       }
 
-      if (detection.iconPath != null) {
-        _metadata.iconPath = detection.iconPath!;
-      }
-
-      _scanForExecutables(_metadata.bundlePath);
-      if (_metadata.iconPath == null) {
-        _scanForIcon(_metadata.bundlePath);
-      }
+      _metadata.iconPath = detection.iconPath;
     });
+
+    // Sequentially scan for executables and icons to prevent async overwrite races
+    await _scanForExecutables(effectiveBundlePath);
+    if (_metadata.iconPath == null) {
+      await _scanForIcon(effectiveBundlePath);
+    }
+
+    // If appName is still a generic directory name (e.g., 'bundle', 'release', 'Desktop')
+    // and an executable was found, derive a clean human-readable appName from the executable!
+    if (genericDirNames.contains(_metadata.appName.toLowerCase()) &&
+        _metadata.executableName.isNotEmpty) {
+      final formatted = _metadata.executableName
+          .split(RegExp(r'[-_.]'))
+          .where((s) => s.isNotEmpty)
+          .map((s) => s[0].toUpperCase() + s.substring(1))
+          .join(' ');
+      if (formatted.isNotEmpty && mounted) {
+        setState(() {
+          _appNameController.text = formatted;
+          _metadata.appName = formatted;
+        });
+      }
+    }
 
     if (mounted && detection.type != DetectedProjectType.generic) {
       final l10n = AppLocalizations.of(context)!;
@@ -424,11 +494,15 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (_) {}
 
+    if (!mounted) return;
     setState(() {
       _detectedExecutables = executables;
       if (executables.isNotEmpty) {
+        final normalizedApp = _metadata.appName.toLowerCase().replaceAll(' ', '_');
         final match = executables.firstWhere(
-          (e) => e.toLowerCase() == _metadata.appName.toLowerCase(),
+          (e) =>
+              e.toLowerCase() == _metadata.appName.toLowerCase() ||
+              e.toLowerCase() == normalizedApp,
           orElse: () => executables.first,
         );
         _executableController.text = match;
@@ -440,20 +514,29 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _scanForIcon(String bundlePath) async {
     final dir = Directory(bundlePath);
     if (!await dir.exists()) return;
+    String? fallbackImage;
     try {
       await for (final entity in dir.list(recursive: true)) {
         if (entity is File) {
           final ext = p.extension(entity.path).toLowerCase();
           if (ext == '.png' || ext == '.svg') {
             final name = p.basename(entity.path).toLowerCase();
-            if (name.contains('icon') || name.contains('app')) {
-              setState(() {
-                _metadata.iconPath = entity.path;
-              });
-              break;
+            if (name.contains('icon') || name.contains('app') || name.contains('logo')) {
+              if (mounted) {
+                setState(() {
+                  _metadata.iconPath = entity.path;
+                });
+              }
+              return;
             }
+            fallbackImage ??= entity.path;
           }
         }
+      }
+      if (fallbackImage != null && mounted) {
+        setState(() {
+          _metadata.iconPath = fallbackImage;
+        });
       }
     } catch (_) {}
   }
@@ -557,53 +640,45 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: DropTarget(
-        onDragEntered: (_) => setState(() => _isDragging = true),
-        onDragExited: (_) => setState(() => _isDragging = false),
-        onDragDone: (details) async {
-          setState(() => _isDragging = false);
-          await _handleDroppedDetails(details);
-        },
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 24),
-                        _buildSourceCard(),
-                        const SizedBox(height: 20),
-                        _buildMetadataCard(),
-                        const SizedBox(height: 20),
-                        _buildOutputCard(),
-                        const SizedBox(height: 20),
-                        LivePreviewCard(metadata: _metadata),
-                        const SizedBox(height: 24),
-                        _buildActionButtonsRow(),
-                        const SizedBox(height: 24),
-                        _buildFooter(),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 24),
+                      _buildSourceCard(),
+                      const SizedBox(height: 20),
+                      _buildMetadataCard(),
+                      const SizedBox(height: 20),
+                      _buildOutputCard(),
+                      const SizedBox(height: 20),
+                      LivePreviewCard(metadata: _metadata),
+                      const SizedBox(height: 24),
+                      _buildActionButtonsRow(),
+                      const SizedBox(height: 24),
+                      _buildFooter(),
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
               ),
             ),
-            if (_isDragging)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: _buildDragOverlay(),
-                ),
+          ),
+          if (_isDragging)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: _buildDragOverlay(),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

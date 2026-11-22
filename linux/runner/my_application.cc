@@ -6,6 +6,7 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
+#include <string.h>
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -13,6 +14,82 @@ struct _MyApplication {
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+static gboolean on_native_drag_motion(GtkWidget* widget,
+                                      GdkDragContext* context,
+                                      gint x,
+                                      gint y,
+                                      guint time,
+                                      gpointer user_data) {
+  auto* channel = static_cast<FlMethodChannel*>(user_data);
+  GdkDragAction suggested = gdk_drag_context_get_suggested_action(context);
+  GdkDragAction actions = gdk_drag_context_get_actions(context);
+  GdkDragAction chosen = GDK_ACTION_COPY;
+  if (suggested & (GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK)) {
+    chosen = suggested;
+  } else if (actions & GDK_ACTION_COPY) {
+    chosen = GDK_ACTION_COPY;
+  } else if (actions & GDK_ACTION_MOVE) {
+    chosen = GDK_ACTION_MOVE;
+  } else if (actions & GDK_ACTION_LINK) {
+    chosen = GDK_ACTION_LINK;
+  }
+  gdk_drag_status(context, chosen, time);
+  fl_method_channel_invoke_method(channel, "dragEntered", nullptr, nullptr, nullptr, nullptr);
+  return FALSE;
+}
+
+static void on_native_drag_leave(GtkWidget* widget,
+                                 GdkDragContext* context,
+                                 guint time,
+                                 gpointer user_data) {
+  auto* channel = static_cast<FlMethodChannel*>(user_data);
+  fl_method_channel_invoke_method(channel, "dragExited", nullptr, nullptr, nullptr, nullptr);
+}
+
+static void on_native_drag_data_received(GtkWidget* widget,
+                                         GdkDragContext* context,
+                                         gint x,
+                                         gint y,
+                                         GtkSelectionData* sdata,
+                                         guint info,
+                                         guint time,
+                                         gpointer user_data) {
+  auto* channel = static_cast<FlMethodChannel*>(user_data);
+  g_autoptr(FlValue) path_list = fl_value_new_list();
+
+  // 1. Extract standard URI list (text/uri-list)
+  gchar** uris = gtk_selection_data_get_uris(sdata);
+  if (uris != nullptr) {
+    for (int i = 0; uris[i] != nullptr; i++) {
+      g_autofree gchar* local_path = g_filename_from_uri(uris[i], nullptr, nullptr);
+      if (local_path != nullptr && strlen(local_path) > 0) {
+        fl_value_append_take(path_list, fl_value_new_string(local_path));
+      } else if (strlen(uris[i]) > 0) {
+        fl_value_append_take(path_list, fl_value_new_string(uris[i]));
+      }
+    }
+    g_strfreev(uris);
+  }
+
+  // 2. Fallback: extract text or raw selection payload
+  if (fl_value_get_length(path_list) == 0) {
+    gchar* text = reinterpret_cast<gchar*>(gtk_selection_data_get_text(sdata));
+    if (text != nullptr) {
+      fl_value_append_take(path_list, fl_value_new_string(text));
+      g_free(text);
+    } else {
+      gint length = gtk_selection_data_get_length(sdata);
+      const guchar* raw_data = gtk_selection_data_get_data(sdata);
+      if (length > 0 && raw_data != nullptr) {
+        g_autofree gchar* raw_str = g_strndup(reinterpret_cast<const gchar*>(raw_data), length);
+        fl_value_append_take(path_list, fl_value_new_string(raw_str));
+      }
+    }
+  }
+
+  fl_method_channel_invoke_method(channel, "dragDropped", path_list, nullptr, nullptr, nullptr);
+}
 
 // Called when first Flutter frame received.
 static void first_frame_cb(FlView* view, gpointer user_data) {
@@ -92,6 +169,51 @@ static void my_application_activate(GApplication* application) {
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+
+  // Disconnect broken desktop_drop GTK signal handlers (void on_drag_motion ABI bug)
+  g_signal_handlers_disconnect_matched(
+      GTK_WIDGET(view), G_SIGNAL_MATCH_ID,
+      g_signal_lookup("drag-motion", GTK_TYPE_WIDGET),
+      0, nullptr, nullptr, nullptr);
+  g_signal_handlers_disconnect_matched(
+      GTK_WIDGET(view), G_SIGNAL_MATCH_ID,
+      g_signal_lookup("drag-data-received", GTK_TYPE_WIDGET),
+      0, nullptr, nullptr, nullptr);
+  g_signal_handlers_disconnect_matched(
+      GTK_WIDGET(view), G_SIGNAL_MATCH_ID,
+      g_signal_lookup("drag-leave", GTK_TYPE_WIDGET),
+      0, nullptr, nullptr, nullptr);
+  g_signal_handlers_disconnect_matched(
+      GTK_WIDGET(view), G_SIGNAL_MATCH_ID,
+      g_signal_lookup("focus-in-event", GTK_TYPE_WIDGET),
+      0, nullptr, nullptr, nullptr);
+
+  // Configure native GTK3 drag-and-drop prioritizing real text/uri-list paths
+  gtk_drag_dest_unset(GTK_WIDGET(view));
+  gtk_drag_dest_set(
+      GTK_WIDGET(view),
+      GTK_DEST_DEFAULT_ALL,
+      nullptr,
+      0,
+      static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK));
+  gtk_drag_dest_add_uri_targets(GTK_WIDGET(view));
+  gtk_drag_dest_add_text_targets(GTK_WIDGET(view));
+
+  FlEngine* engine = fl_view_get_engine(view);
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  FlMethodChannel* drop_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(engine),
+      "appimage_studio/native_drop",
+      FL_METHOD_CODEC(codec));
+  g_object_set_data_full(G_OBJECT(view), "native_drop_channel",
+                         drop_channel, g_object_unref);
+
+  g_signal_connect(GTK_WIDGET(view), "drag-motion",
+                   G_CALLBACK(on_native_drag_motion), drop_channel);
+  g_signal_connect(GTK_WIDGET(view), "drag-leave",
+                   G_CALLBACK(on_native_drag_leave), drop_channel);
+  g_signal_connect(GTK_WIDGET(view), "drag-data-received",
+                   G_CALLBACK(on_native_drag_data_received), drop_channel);
 
   g_signal_connect(view, "first-frame", G_CALLBACK(first_frame_cb), self);
 

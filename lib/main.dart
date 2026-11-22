@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart' show GlobalCupertinoLocalizations;
+import 'package:flutter_localizations/flutter_localizations.dart' show GlobalWidgetsLocalizations;
+import 'package:material_ui/material_ui.dart';
 import 'l10n/app_localizations.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/theme/app_theme.dart';
@@ -32,7 +34,12 @@ class _AppImageStudioAppState extends State<AppImageStudioApp> {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       locale: _currentLocale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
       supportedLocales: AppLocalizations.supportedLocales,
       home: HomeScreen(
         currentLocale: _currentLocale,

@@ -3,7 +3,7 @@
   "appTitle": "استوديو آب إيمج",
   "appSubtitle": "حوّل أي مجلد تطبيق مجمّع (Flutter, Rust, Go, C++, etc.) إلى حزمة AppImage مستقلة بنقرة واحدة",
   "switchLanguage": "تغيير اللغة",
-  "appVersion": "v1.1.0",
+  "appVersion": "v1.1.1",
   "developedBy": "تطوير بكل ❤️ بواسطة علي الخضر والمساهمين",
   
   "sourceCardTitle": "1. مسار مجلد التطبيق والملف التنفيذي",

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
@@ -27,20 +27,23 @@ class FilePickerField extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     try {
       if (isDirectory) {
-        final result = await FilePicker.platform.getDirectoryPath(
+        final result = await FilePicker.pickDirectory(
           dialogTitle: label,
         );
-        if (result != null && result.isNotEmpty) {
-          onChanged(result);
+        if (result != null) {
+          final dirPath = result.scheme == 'file' ? result.toFilePath() : result.path;
+          if (dirPath.isNotEmpty) {
+            onChanged(dirPath);
+          }
         }
       } else {
-        final result = await FilePicker.platform.pickFiles(
+        final result = await FilePicker.pickFiles(
           dialogTitle: label,
           type: allowedExtensions != null ? FileType.custom : FileType.any,
           allowedExtensions: allowedExtensions,
         );
-        if (result != null && result.files.single.path != null) {
-          onChanged(result.files.single.path!);
+        if (result.isNotEmpty && result.first.path != null) {
+          onChanged(result.first.path!);
         }
       }
     } catch (e) {

@@ -20,7 +20,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchLanguage => 'Switch Language';
 
   @override
-  String get appVersion => 'v1.1.0';
+  String get appVersion => 'v1.1.1';
 
   @override
   String get developedBy => 'Developed with ❤️ by Ali El Khedr & Contributors';

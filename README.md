@@ -10,10 +10,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v1.0.0-00E5FF?style=for-the-badge&logo=appimage&logoColor=white" alt="Release" />
-  <img src="https://img.shields.io/badge/Platform-Linux%20x86__64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
+  <img src="https://img.shields.io/badge/Release-v1.1.1-00E5FF?style=for-the-badge&logo=appimage&logoColor=white" alt="Release" />
+  <img src="https://img.shields.io/badge/Platform-Linux%20x64%20(64--bit)-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-7C4DFF?style=for-the-badge" alt="License" />
-  <img src="https://img.shields.io/badge/Built%20With-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
+  <img src="https://img.shields.io/badge/Built%20With-Flutter%203.50+-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
 </p>
 
 <p align="center">
@@ -52,12 +52,16 @@
 
 ### ✨ Key Features
 - 🖱️ **One-Click Packaging**: Select your compiled bundle folder and build your `.AppImage` instantly.
+- 📥 **Native GTK3 Drag & Drop**: Drag and drop an entire bundle directory, its inner contents, or an app icon directly into the window (compatible with both X11 and Wayland).
+- ⚡ **Smart Project Importers**: Automatically detects and imports metadata from Flutter (`pubspec.yaml`), Rust (`Cargo.toml`), Electron (`package.json`), and Godot (`project.godot`) projects.
+- 💾 **Project Profiles & Presets**: Save and reload your packaging configuration via `appimage_studio.yaml` for repeatable one-click builds.
+- 📜 **Standalone CLI Build Script Generator**: Export a self-contained `build_appimage.sh` script to package your project directly from the terminal or CI/CD pipelines.
+- 👁️ **Live Desktop Preview**: Real-time preview of your app's launcher icon, system menu entry, and clean output filename (`[AppName]-[Version].AppImage`) before building.
 - 💼 **Portable Single-File Apps**: Turn your programs into portable binaries that run directly from any folder or USB drive without requiring installation or root access.
-- 🔍 **Smart Auto-Detection**: Automatically detects application names, executable binaries, and app icons.
 - ⚡ **100% Offline-First**: Built-in `appimagetool` binary — works completely offline without network dependency.
 - 🌐 **Multilingual & System Adaptive**: Full support for Arabic (RTL) and English (LTR) with automatic system language detection and instant switcher.
 - 📌 **Optional Desktop Integration**: Option to install your newly built application into your system Start menu and dock immediately.
-- 🖥️ **Live Build Console**: Real-time terminal output with smart error diagnostics and suggested fixes.
+- 🖥️ **Live Build Console & Log Export**: Real-time terminal output with smart error diagnostics, one-click log copy, and text file export.
 - 🧪 **One-Click Test Run**: Launch and test the generated `.AppImage` directly from the app.
 
 ---
@@ -65,16 +69,20 @@
 <a name="arabic"></a>
 ## 🇸🇦 نظرة عامة بالعربية
 
-**استوديو آب إيمج (AppImage Studio)** هو تطبيق ديسكتوب عصري ومفتوح المصدر يهدف إلى تسهيل تحويل مجلدات البرمجيات والمشاريع المجمّعة أو المحمولة (مثل تطبيقات فلاتر، رست، جو، بايثون، أو البرامج المحمولة كـ Blender و Telegram و VS Code) إلى حزم **AppImage** مستقلة وجاهزة للعمل على كافة توزيعات لينكس، مع إمكانية تثبيتها ودمجها مباشرة في قائمة "ابدأ" بنقرة واحدة وبدون الحاجة لكتابة أوامر.
+**استوديو آب إيمج (AppImage Studio)** هو تطبيق ديسكتوب عصري ومفتوح المصدر يهدف إلى تسهيل تحويل مجلدات البرمجيات والمشاريع المجمّعة أو المحمولة (مثل تطبيقات فلاتر، رست، جو، بايثون، جودوت، إلكترون، أو البرامج المحمولة كـ Blender و Telegram و VS Code) إلى حزم **AppImage** مستقلة وجاهزة للعمل على كافة توزيعات لينكس، مع إمكانية تثبيتها ودمجها مباشرة في قائمة "ابدأ" بنقرة واحدة وبدون الحاجة لكتابة أوامر.
 
 ### 🌟 أبرز الميزات:
 - 📦 **تغليف فوري بنقرة واحدة**: اختر مجلد التطبيق المجمّع واضغط على زر التوليد ليصبح تطبيقك حزمة واحدة جاهزة.
+- 📥 **سحب وإفلات أصلي (Native GTK3 Drag & Drop)**: اسحب مجلد التطبيق كاملاً أو محتوياته الداخلية أو ملف الأيقونة وأفلته مباشرة داخل النافذة لتعبئة الحقول تلقائياً (متوافق مع X11 و Wayland).
+- ⚡ **استيراد ذكي لمشاريع التطوير**: التعرف التلقائي على مشاريع Flutter (`pubspec.yaml`)، و Rust (`Cargo.toml`)، و Electron (`package.json`)، و Godot (`project.godot`) واستخراج مسار الحزمة والإصدار والأيقونة.
+- 💾 **حفظ وتحميل قوالب المشاريع (Presets)**: حفظ إعدادات الحزمة في ملف `appimage_studio.yaml` داخل مجلد المشروع لإعادة البناء الفوري لاحقاً.
+- 📜 **تصدير سكربت بناء طرفي مستقل (`build_appimage.sh`)**: توليد سكربت Bash جاهز لإعادة بناء الحزمة من الطرفية أو سيرفرات الأتمتة مباشرة.
+- 👁️ **معاينة بصرية حية لسطح المكتب**: معاينة فورية لمظهر أيقونة التطبيق وبطاقة قائمة النظام واسم الملف النهائي (`[AppName]-[Version].AppImage`) أثناء الكتابة.
 - 💼 **إنشاء تطبيقات محمولة (Portable Apps)**: تحويل أي برنامج إلى ملف تنفيذي محمول مستقل، يمكنك نسخه إلى فلاش ميموري (USB) وتشغيله على أي حاسوب لينكس مباشرة دون تثبيت أو صلاحيات جذر.
-- 🔍 **فحص واكتشاف ذكي تلقائي**: يتعرف التطبيق تلقائياً على اسم البرنامج، الملف التنفيذي الرئيسي، والأيقونة المناسبة.
 - ⚡ **استقلالية تامة وبدون إنترنت (Offline-First)**: مدمج بـ `appimagetool` ليعمل في أي بيئة معزولة عن الشبكة بأمان كامل.
 - 🌐 **دعم كامل للغتين العربية والإنجليزية**: واجهة تتكيف تلقائياً مع لغة نظامك مع دعم اتجاه اليمين لليسار (RTL) وزر تبديل فوري.
 - 📌 **تكامل اختياري مع قائمة "ابدأ"**: خيار لتثبيت التطبيق المولد مباشرة في قائمة تطبيقات جهازك وشريط المهام.
-- 🖥️ **نافذة طرفية تفاعلية مباشرة**: عرض خطوات البناء ومخرجات الضغط الحية مع تشخيص ذكي للأخطاء وتقديم حلول مقترحة.
+- 🖥️ **نافذة طرفية تفاعلية مع نسخ وتصدير السجل**: عرض خطوات البناء ومخرجات الضغط الحية مع تشخيص ذكي للأخطاء وأزرار لنسخ السجل أو حفظه كملف نصي.
 - 🚀 **تجربة وتشغيل مباشر**: زر لتشغيل واختبار ملف الـ AppImage المولد فوراً.
 
 ---
@@ -131,7 +139,7 @@ Thanks to the continuous build pipeline on **Ubuntu 22.04 LTS (glibc 2.35)**, Ap
 
 ### 🇬🇧 Requirements for Bundle Folders
 To ensure seamless AppImage generation, the source folder must meet the following criteria:
-1. **Linux Native Binary:** Must contain a compiled 64-bit Linux executable (`x86_64` ELF binary) or an executable shell script (`.sh`) — *not a Windows `.exe`*.
+1. **Linux Native Binary:** Must contain a compiled 64-bit Linux executable (`x64` ELF binary) or an executable shell script (`.sh`) — *not a Windows `.exe`*.
 2. **Self-Contained Directory:** The folder should include all required application dependencies and assets (e.g., `bundle/` or `dist/` folders from Flutter, Rust, Go, or portable Linux apps).
 3. **Relative Resource Paths:** The application should locate its internal data using relative paths rather than hardcoded absolute directories.
 4. **App Icon (Optional):** Providing a square `PNG` or `SVG` icon (256x256+) is recommended. If missing, a default vector icon is generated automatically.
@@ -140,7 +148,7 @@ To ensure seamless AppImage generation, the source folder must meet the followin
 
 ### 🇸🇦 شروط مجلد التطبيق المراد تحويله
 لضمان نجاح عملية التغليف وعمل الـ AppImage بسلاسة:
-1. **ملف تنفيذي مخصص للينكس:** يجب أن يحتوي المجلد على ملف تنفيذي مجمّع لنظام لينكس (`x86_64`) أو سكربت تشغيل (`.sh`) قابل للتنفيذ (*لا يدعم ملفات ويندوز `.exe`*).
+1. **ملف تنفيذي مخصص للينكس (64-bit):** يجب أن يحتوي المجلد على ملف تنفيذي مجمّع لنظام لينكس بمعمارية `x64` (64-bit) أو سكربت تشغيل (`.sh`) قابل للتنفيذ (*لا يدعم ملفات ويندوز `.exe`*).
 2. **مجلد مكتفٍ ذاتياً:** يجب أن يضم المجلد ملف البرنامج الرئيسي ومكتباته وموارده التابعة له (مثل مجلدات `bundle` الناتجة عن Flutter، Rust، Go، أو مجلدات البرامج المحمولة).
 3. **الاعتماد على مسارات نسبية:** ألا يعتمد البرنامج على مسارات ثابتة خاصة بجهاز المطور (Hardcoded Paths)، بل يبحث عن ملفاته نسبياً داخل مجلده.
 4. **أيقونة التطبيق (اختياري):** يفضل توفير أيقونة مربعة بصيغة `PNG` أو `SVG`. وفي حال عدم توفرها، يولد التطبيق تلقائياً أيقونة بديلة عالية الجودة.
@@ -151,7 +159,7 @@ To ensure seamless AppImage generation, the source folder must meet the followin
 ## 🛠️ How to Build & Run Locally | طريقة التشغيل والبناء
 
 ### Requirements | المتطلبات:
-- Flutter SDK (>= 3.13.0)
+- Flutter SDK (>= 3.50.0) & Dart SDK (>= 3.14.0)
 - Linux Desktop Build Tools (`clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev`)
 
 ### Running in Development | التشغيل في وضع التطوير:
@@ -164,7 +172,7 @@ flutter run -d linux
 ```bash
 ./scripts/build_appimage.sh
 ```
-The resulting `.AppImage` will be located in `dist/AppImageStudio-x86_64.AppImage`.
+The resulting `.AppImage` will be generated with the clean naming format `[AppName]-[Version].AppImage`.
 
 ---
 

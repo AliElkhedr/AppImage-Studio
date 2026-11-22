@@ -3,7 +3,7 @@
   "appTitle": "AppImage Studio",
   "appSubtitle": "Convert any bundled app folder (Flutter, Rust, Go, C++, etc.) into a standalone AppImage in one click",
   "switchLanguage": "Switch Language",
-  "appVersion": "v1.1.0",
+  "appVersion": "v1.1.1",
   "developedBy": "Developed with ❤️ by Ali El Khedr & Contributors",
   
   "sourceCardTitle": "1. App Bundle Path & Executable",

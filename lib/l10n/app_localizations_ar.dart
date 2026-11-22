@@ -20,7 +20,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get switchLanguage => 'تغيير اللغة';
 
   @override
-  String get appVersion => 'v1.1.0';
+  String get appVersion => 'v1.1.1';
 
   @override
   String get developedBy => 'تطوير بكل ❤️ بواسطة علي الخضر والمساهمين';
