@@ -54,15 +54,16 @@ export ARCH=x86_64
 
 # Use bundled appimagetool or system one
 if [ -f "assets/bin/appimagetool" ]; then
-  ./assets/bin/appimagetool build/AppDir dist/AppImageStudio-x86_64.AppImage
+  chmod +x assets/bin/appimagetool
+  ./assets/bin/appimagetool build/AppDir "dist/AppImage Studio-1.1.1.AppImage"
 elif which appimagetool > /dev/null 2>&1; then
-  appimagetool build/AppDir dist/AppImageStudio-x86_64.AppImage
+  appimagetool build/AppDir "dist/AppImage Studio-1.1.1.AppImage"
 else
   echo "Downloading appimagetool..."
   curl -L -o /tmp/appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
   chmod +x /tmp/appimagetool
-  /tmp/appimagetool build/AppDir dist/AppImageStudio-x86_64.AppImage
+  /tmp/appimagetool build/AppDir "dist/AppImage Studio-1.1.1.AppImage"
 fi
 
-chmod +x dist/AppImageStudio-x86_64.AppImage
-echo "🎉 [4/4] Successfully created: dist/AppImageStudio-x86_64.AppImage"
+chmod +x "dist/AppImage Studio-1.1.1.AppImage"
+echo "🎉 [4/4] Successfully created: dist/AppImage Studio-1.1.1.AppImage"

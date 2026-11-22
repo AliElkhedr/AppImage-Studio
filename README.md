@@ -169,10 +169,11 @@ flutter run -d linux
 ```
 
 ### Packaging AppImage Studio as an AppImage | بناء وتغليف التطبيق نفسه:
-```bash
-./scripts/build_appimage.sh
-```
-The resulting `.AppImage` will be generated with the clean naming format `[AppName]-[Version].AppImage`.
+1. Build the Linux release bundle locally:
+   ```bash
+   flutter build linux --release
+   ```
+2. Open **AppImage Studio**, drag and drop `build/linux/x64/release/bundle`, and generate the standalone `[AppName]-[Version].AppImage` directly (or run `./scripts/build_appimage.sh`).
 
 ---
 
